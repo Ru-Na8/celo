@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     }
 
     // Find the booking
-    const booking = db.bookings.getById(id);
+    const booking = await db.bookings.getById(id);
 
     if (!booking) {
       return NextResponse.json(
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     }
 
     // Cancel the booking
-    const updated = db.bookings.update(id, { status: "cancelled" });
+    const updated = await db.bookings.update(id, { status: "cancelled" });
 
     if (!updated) {
       return NextResponse.json(

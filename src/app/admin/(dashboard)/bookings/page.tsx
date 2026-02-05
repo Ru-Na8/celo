@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 interface Booking {
   id: string;
@@ -25,11 +25,19 @@ const services = [
   { id: "skagg", name: "Skäggtrimning", price: 250, duration: 20 },
 ];
 
-const timeSlots = [
+// All possible time slots (Mon-Sat: 10-19, Sun: 10-15)
+const allTimeSlots = [
   "10:00", "10:30", "11:00", "11:30", "12:00", "12:30",
   "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
   "16:00", "16:30", "17:00", "17:30", "18:00", "18:30",
 ];
+
+const sundayTimeSlots = [
+  "10:00", "10:30", "11:00", "11:30", "12:00", "12:30",
+  "13:00", "13:30", "14:00", "14:30",
+];
+
+const MAX_BOOKINGS_PER_SLOT = 2;
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -49,6 +57,56 @@ export default function BookingsPage() {
     time: "",
     notes: "",
   });
+
+  // Calculate available time slots based on date and existing bookings
+  const availableTimeSlots = useMemo(() => {
+    if (!newBooking.date) return allTimeSlots;
+
+    const selectedDate = new Date(newBooking.date);
+    const now = new Date();
+    const isToday = selectedDate.toDateString() === now.toDateString();
+    const isSunday = selectedDate.getDay() === 0;
+
+    // Get base slots for the day
+    let baseSlots = isSunday ? sundayTimeSlots : allTimeSlots;
+
+    // If today, filter out past times (with 30 min buffer)
+    if (isToday) {
+      const currentMinutes = now.getHours() * 60 + now.getMinutes() + 30;
+      baseSlots = baseSlots.filter((time) => {
+        const [hours, minutes] = time.split(":").map(Number);
+        const slotMinutes = hours * 60 + minutes;
+        return slotMinutes > currentMinutes;
+      });
+    }
+
+    return baseSlots;
+  }, [newBooking.date]);
+
+  // Count bookings per time slot for the selected date
+  const slotBookingCounts = useMemo(() => {
+    if (!newBooking.date) return {};
+
+    const counts: Record<string, number> = {};
+    const dateBookings = bookings.filter(
+      (b) => b.date === newBooking.date && b.status !== "cancelled"
+    );
+
+    dateBookings.forEach((b) => {
+      counts[b.time] = (counts[b.time] || 0) + 1;
+    });
+
+    return counts;
+  }, [newBooking.date, bookings]);
+
+  // Get truly available slots (not full)
+  const selectableTimeSlots = useMemo(() => {
+    return availableTimeSlots.map((time) => ({
+      time,
+      count: slotBookingCounts[time] || 0,
+      available: (slotBookingCounts[time] || 0) < MAX_BOOKINGS_PER_SLOT,
+    }));
+  }, [availableTimeSlots, slotBookingCounts]);
 
   const fetchBookings = async () => {
     try {
@@ -460,8 +518,8 @@ export default function BookingsPage() {
         <SummaryCard label="Väntande" value={bookings.filter((b) => b.status === "pending").length} color="#F59E0B" />
         <SummaryCard label="Bekräftade" value={bookings.filter((b) => b.status === "confirmed").length} color="#10B981" />
         <SummaryCard
-          label="Total intäkt"
-          value={`${bookings.filter((b) => b.status !== "cancelled").reduce((sum, b) => sum + b.servicePrice, 0)} kr`}
+          label="Intäkt (bekräftad)"
+          value={`${bookings.filter((b) => b.status === "confirmed" || b.status === "completed").reduce((sum, b) => sum + b.servicePrice, 0)} kr`}
           color="#D4AF37"
         />
       </div>
@@ -540,7 +598,7 @@ export default function BookingsPage() {
                     type="date"
                     min={today}
                     value={newBooking.date}
-                    onChange={(e) => setNewBooking({ ...newBooking, date: e.target.value })}
+                    onChange={(e) => setNewBooking({ ...newBooking, date: e.target.value, time: "" })}
                     style={{
                       width: "100%",
                       padding: "12px 16px",
@@ -559,6 +617,7 @@ export default function BookingsPage() {
                   <select
                     value={newBooking.time}
                     onChange={(e) => setNewBooking({ ...newBooking, time: e.target.value })}
+                    disabled={!newBooking.date}
                     style={{
                       width: "100%",
                       padding: "12px 16px",
@@ -567,13 +626,30 @@ export default function BookingsPage() {
                       borderRadius: "8px",
                       color: "#fff",
                       fontSize: "14px",
+                      opacity: !newBooking.date ? 0.5 : 1,
                     }}
                   >
-                    <option value="">Välj tid...</option>
-                    {timeSlots.map((time) => (
-                      <option key={time} value={time}>{time}</option>
+                    <option value="">{newBooking.date ? "Välj tid..." : "Välj datum först"}</option>
+                    {selectableTimeSlots.map(({ time, count, available }) => (
+                      <option
+                        key={time}
+                        value={time}
+                        disabled={!available}
+                      >
+                        {time} {count > 0 ? `(${count}/${MAX_BOOKINGS_PER_SLOT} bokade)` : ""} {!available ? "- FULL" : ""}
+                      </option>
                     ))}
                   </select>
+                  {newBooking.date && selectableTimeSlots.length === 0 && (
+                    <p style={{ color: "#F59E0B", fontSize: "12px", marginTop: "6px" }}>
+                      Inga tillgängliga tider för detta datum
+                    </p>
+                  )}
+                  {newBooking.date && selectableTimeSlots.every(s => !s.available) && selectableTimeSlots.length > 0 && (
+                    <p style={{ color: "#EF4444", fontSize: "12px", marginTop: "6px" }}>
+                      Alla tider är fullbokade för detta datum
+                    </p>
+                  )}
                 </div>
               </div>
 

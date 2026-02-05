@@ -187,13 +187,37 @@ export default function AdminDashboardLayout({
             })}
           </nav>
 
-          {/* Back to site + Logout */}
+          {/* Refresh + Back to site + Logout */}
           <div
             style={{
               padding: "16px 12px",
               borderTop: "1px solid rgba(255,255,255,0.05)",
             }}
           >
+            <button
+              onClick={() => {
+                router.refresh();
+                window.location.reload();
+              }}
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "12px 16px",
+                borderRadius: "10px",
+                backgroundColor: "rgba(212,175,55,0.1)",
+                color: "#D4AF37",
+                border: "1px solid rgba(212,175,55,0.2)",
+                cursor: "pointer",
+                fontSize: "14px",
+                textAlign: "left",
+                marginBottom: "8px",
+              }}
+            >
+              <span style={{ fontSize: "18px" }}>🔄</span>
+              Uppdatera
+            </button>
             <a
               href="/"
               style={{

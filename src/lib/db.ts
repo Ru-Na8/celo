@@ -1,5 +1,8 @@
-// Database module - In production, replace with PostgreSQL/MySQL
-// This provides a clean interface that can be swapped out easily
+// Database module - Now uses file-based persistence (JSON)
+// In production, replace with PostgreSQL/MySQL
+// This is a SERVER-ONLY module
+
+import { loadBookings, saveBookings } from "./file-storage";
 
 export interface Booking {
   id: string;
@@ -101,9 +104,31 @@ const initialReviews: Review[] = [
   { id: "31", name: "Hasan Shkeer", rating: 5, text: "", date: "7 år sedan", isVisible: true },
 ];
 
-// In-memory storage (replace with real DB in production)
+// In-memory storage (now persisted to file)
 let bookings: Booking[] = [];
 let reviews: Review[] = [...initialReviews];
+let initialized = false;
+
+async function initializeBookings() {
+  if (!initialized) {
+    try {
+      const loaded = await loadBookings();
+      bookings = loaded;
+    } catch (error) {
+      // File doesn't exist yet, keep empty array
+      bookings = [];
+    }
+    initialized = true;
+  }
+}
+
+async function persistBookings() {
+  try {
+    await saveBookings(bookings);
+  } catch (error) {
+    console.error("Failed to persist bookings:", error);
+  }
+}
 
 // Generate unique ID
 function generateId(): string {
@@ -114,27 +139,32 @@ function generateId(): string {
 export const db = {
   // Bookings
   bookings: {
-    getAll: (): Booking[] => {
+    getAll: async (): Promise<Booking[]> => {
+      await initializeBookings();
       return [...bookings].sort((a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     },
 
-    getById: (id: string): Booking | null => {
+    getById: async (id: string): Promise<Booking | null> => {
+      await initializeBookings();
       return bookings.find(b => b.id === id) || null;
     },
 
-    getByDate: (date: string): Booking[] => {
+    getByDate: async (date: string): Promise<Booking[]> => {
+      await initializeBookings();
       return bookings.filter(b => b.date === date && b.status !== "cancelled");
     },
 
-    getByDateRange: (startDate: string, endDate: string): Booking[] => {
+    getByDateRange: async (startDate: string, endDate: string): Promise<Booking[]> => {
+      await initializeBookings();
       return bookings.filter(b =>
         b.date >= startDate && b.date <= endDate
       );
     },
 
-    create: (data: Omit<Booking, "id" | "createdAt" | "updatedAt" | "status">): Booking => {
+    create: async (data: Omit<Booking, "id" | "createdAt" | "updatedAt" | "status">): Promise<Booking> => {
+      await initializeBookings();
       const now = new Date().toISOString();
       const booking: Booking = {
         ...data,
@@ -144,10 +174,12 @@ export const db = {
         updatedAt: now,
       };
       bookings.push(booking);
+      await persistBookings();
       return booking;
     },
 
-    update: (id: string, data: Partial<Booking>): Booking | null => {
+    update: async (id: string, data: Partial<Booking>): Promise<Booking | null> => {
+      await initializeBookings();
       const index = bookings.findIndex(b => b.id === id);
       if (index === -1) return null;
 
@@ -156,16 +188,23 @@ export const db = {
         ...data,
         updatedAt: new Date().toISOString(),
       };
+      await persistBookings();
       return bookings[index];
     },
 
-    delete: (id: string): boolean => {
+    delete: async (id: string): Promise<boolean> => {
+      await initializeBookings();
       const initialLength = bookings.length;
       bookings = bookings.filter(b => b.id !== id);
-      return bookings.length < initialLength;
+      if (bookings.length < initialLength) {
+        await persistBookings();
+        return true;
+      }
+      return false;
     },
 
-    getStats: () => {
+    getStats: async () => {
+      await initializeBookings();
       const now = new Date();
       const today = now.toISOString().split("T")[0];
       const thisMonth = today.slice(0, 7);

@@ -1,0 +1,54 @@
+[
+  {
+    "customerName": "Rula Nayf",
+    "email": "rn222qf@student.lnu.se",
+    "phone": "0793358236",
+    "notes": "",
+    "serviceId": "herrklippning",
+    "date": "2026-02-06",
+    "time": "10:00",
+    "id": "ml9qajkh2877cbajcmu",
+    "status": "confirmed",
+    "createdAt": "2026-02-05T17:26:36.689Z",
+    "updatedAt": "2026-02-05T17:27:45.232Z"
+  },
+  {
+    "customerName": "sara Nayf",
+    "email": "rn222qf@student.lnu.se",
+    "phone": "0793358236",
+    "notes": "",
+    "serviceId": "rakning",
+    "date": "2026-02-05",
+    "time": "10:30",
+    "id": "ml9qdd9l1psixv06ul8",
+    "status": "confirmed",
+    "createdAt": "2026-02-05T17:28:48.489Z",
+    "updatedAt": "2026-02-05T17:45:25.144Z"
+  },
+  {
+    "customerName": "moe",
+    "email": "rn222qf@student.lnu.se",
+    "phone": "0793358236",
+    "notes": "",
+    "serviceId": "vip-paket",
+    "date": "2026-02-06",
+    "time": "10:00",
+    "id": "ml9qw0lmqsjdkwxw3eo",
+    "status": "confirmed",
+    "createdAt": "2026-02-05T17:43:18.538Z",
+    "updatedAt": "2026-02-05T17:45:27.078Z"
+  },
+  {
+    "customerName": "alex",
+    "email": "rn222qf@student.lnu.se",
+    "phone": "0793358236",
+    "notes": "",
+    "serviceId": "rakning",
+    "date": "2026-02-06",
+    "time": "12:30",
+    "id": "ml9qxgus8jlyxmebbp2",
+    "status": "confirmed",
+    "createdAt": "2026-02-05T17:44:26.259Z",
+    "updatedAt": "2026-02-05T17:45:28.337Z"
+  }
+]

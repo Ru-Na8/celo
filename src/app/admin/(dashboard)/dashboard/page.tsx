@@ -20,11 +20,15 @@ interface Stats {
     amount: number;
     status: string;
   }[];
+  serviceDistribution: { name: string; value: number; color: string }[];
+  statusDistribution: { name: string; value: number; color: string }[];
+  bookingsPerDay: { name: string; date: string; count: number }[];
   stats: {
     totalBookings: number;
     todayBookings: number;
     reviewCount: number;
     reviewAverage: string;
+    confirmedRevenue: number;
   };
 }
 
@@ -78,7 +82,7 @@ export default function DashboardPage() {
     );
   }
 
-  const { kpis, revenueData, recentBookings, stats } = data;
+  const { kpis, revenueData, recentBookings, serviceDistribution, statusDistribution, bookingsPerDay, stats } = data;
 
   // Calculate max revenue for chart scaling
   const maxRevenue = Math.max(...revenueData.map((d) => d.total), 1);
@@ -97,18 +101,18 @@ export default function DashboardPage() {
 
       {/* KPI Cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px", marginBottom: "32px" }}>
-        <KpiCard title="Intäkter (månad)" value={`${kpis.revenue.value.toLocaleString()} kr`} change={kpis.revenue.change} icon="💰" />
+        <KpiCard title="Intäkter (bekräftade)" value={`${kpis.revenue.value.toLocaleString()} kr`} change={kpis.revenue.change} icon="💰" />
         <KpiCard title="Bokningar (månad)" value={kpis.bookings.value.toString()} change={kpis.bookings.change} icon="📅" />
         <KpiCard title="Väntande" value={kpis.pending.value.toString()} change={kpis.pending.change} icon="⏳" />
         <KpiCard title="Google Betyg" value={`${kpis.rating.value} ⭐`} change={kpis.rating.change} icon="⭐" />
       </div>
 
-      {/* Charts and Recent */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+      {/* Charts Row 1: Revenue and Recent Bookings */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "24px" }}>
         {/* Revenue Chart */}
         <div style={{ backgroundColor: "#1B2838", borderRadius: "16px", padding: "24px" }}>
           <h3 style={{ color: "#fff", fontSize: "1.1rem", fontWeight: 600, marginBottom: "24px" }}>
-            Intäkter per dag
+            Intäkter per dag (bekräftade)
           </h3>
           <div style={{ display: "flex", alignItems: "flex-end", gap: "8px", height: "200px" }}>
             {revenueData.map((day, i) => (
@@ -128,45 +132,143 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Recent Bookings */}
+        {/* Bookings per Day Chart */}
         <div style={{ backgroundColor: "#1B2838", borderRadius: "16px", padding: "24px" }}>
-          <h3 style={{ color: "#fff", fontSize: "1.1rem", fontWeight: 600, marginBottom: "16px" }}>
-            Senaste Bokningar
+          <h3 style={{ color: "#fff", fontSize: "1.1rem", fontWeight: 600, marginBottom: "24px" }}>
+            Bokningar per dag
           </h3>
-          {recentBookings.length === 0 ? (
-            <p style={{ color: "rgba(255,255,255,0.5)", textAlign: "center", padding: "40px 0" }}>
-              Inga bokningar än
-            </p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {recentBookings.slice(0, 5).map((booking) => (
-                <div
-                  key={booking.id}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "12px 16px",
-                    backgroundColor: "rgba(255,255,255,0.03)",
-                    borderRadius: "10px",
-                    border: "1px solid rgba(255,255,255,0.05)",
-                  }}
-                >
-                  <div>
-                    <div style={{ color: "#fff", fontWeight: 500 }}>{booking.name}</div>
-                    <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}>
-                      {booking.service} • {booking.date}
+          <div style={{ display: "flex", alignItems: "flex-end", gap: "8px", height: "200px" }}>
+            {bookingsPerDay.map((day, i) => {
+              const maxCount = Math.max(...bookingsPerDay.map((d) => d.count), 1);
+              return (
+                <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                  <span style={{ color: "#10B981", fontSize: "12px", fontWeight: 600 }}>{day.count}</span>
+                  <div
+                    style={{
+                      width: "100%",
+                      height: `${Math.max((day.count / maxCount) * 140, 4)}px`,
+                      backgroundColor: day.count > 0 ? "#10B981" : "rgba(255,255,255,0.1)",
+                      borderRadius: "4px 4px 0 0",
+                      transition: "height 0.3s",
+                    }}
+                  />
+                  <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "12px" }}>{day.name}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Row 2: Service Distribution and Status Distribution */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "24px" }}>
+        {/* Service Distribution */}
+        <div style={{ backgroundColor: "#1B2838", borderRadius: "16px", padding: "24px" }}>
+          <h3 style={{ color: "#fff", fontSize: "1.1rem", fontWeight: 600, marginBottom: "24px" }}>
+            Tjänstfördelning
+          </h3>
+          <div style={{ display: "flex", gap: "24px", alignItems: "center" }}>
+            {/* Mini bar chart */}
+            <div style={{ flex: 1 }}>
+              {serviceDistribution.map((service, i) => {
+                const total = serviceDistribution.reduce((sum, s) => sum + s.value, 0);
+                const percentage = total > 0 ? (service.value / total) * 100 : 0;
+                return (
+                  <div key={i} style={{ marginBottom: "12px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                      <span style={{ color: "rgba(255,255,255,0.8)", fontSize: "13px" }}>{service.name}</span>
+                      <span style={{ color: service.color, fontSize: "13px", fontWeight: 600 }}>{service.value}</span>
+                    </div>
+                    <div style={{ height: "8px", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "4px", overflow: "hidden" }}>
+                      <div
+                        style={{
+                          height: "100%",
+                          width: `${percentage}%`,
+                          backgroundColor: service.color,
+                          borderRadius: "4px",
+                          transition: "width 0.3s",
+                        }}
+                      />
                     </div>
                   </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ color: "#D4AF37", fontWeight: 600 }}>{booking.amount} kr</div>
-                    <StatusBadge status={booking.status} />
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Status Distribution */}
+        <div style={{ backgroundColor: "#1B2838", borderRadius: "16px", padding: "24px" }}>
+          <h3 style={{ color: "#fff", fontSize: "1.1rem", fontWeight: 600, marginBottom: "24px" }}>
+            Bokningsstatus
+          </h3>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            {statusDistribution.map((status, i) => (
+              <div
+                key={i}
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.03)",
+                  borderRadius: "12px",
+                  padding: "16px",
+                  border: `1px solid ${status.color}20`,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                  <div
+                    style={{
+                      width: "10px",
+                      height: "10px",
+                      borderRadius: "50%",
+                      backgroundColor: status.color,
+                    }}
+                  />
+                  <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "12px" }}>{status.name}</span>
+                </div>
+                <div style={{ color: status.color, fontSize: "1.5rem", fontWeight: "bold" }}>{status.value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Bookings */}
+      <div style={{ backgroundColor: "#1B2838", borderRadius: "16px", padding: "24px", marginBottom: "24px" }}>
+        <h3 style={{ color: "#fff", fontSize: "1.1rem", fontWeight: 600, marginBottom: "16px" }}>
+          Senaste Bokningar
+        </h3>
+        {recentBookings.length === 0 ? (
+          <p style={{ color: "rgba(255,255,255,0.5)", textAlign: "center", padding: "40px 0" }}>
+            Inga bokningar än
+          </p>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "12px" }}>
+            {recentBookings.slice(0, 6).map((booking) => (
+              <div
+                key={booking.id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "12px 16px",
+                  backgroundColor: "rgba(255,255,255,0.03)",
+                  borderRadius: "10px",
+                  border: "1px solid rgba(255,255,255,0.05)",
+                }}
+              >
+                <div>
+                  <div style={{ color: "#fff", fontWeight: 500 }}>{booking.name}</div>
+                  <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}>
+                    {booking.service} • {booking.date}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ color: "#D4AF37", fontWeight: 600 }}>{booking.amount} kr</div>
+                  <StatusBadge status={booking.status} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Quick Stats */}

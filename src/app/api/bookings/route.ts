@@ -4,9 +4,9 @@ import { sendBookingConfirmation, sendAdminNotification } from "@/lib/email";
 
 export async function GET() {
   try {
-    const bookings = db.bookings.getAll();
+    const bookings = await db.bookings.getAll();
     return NextResponse.json({ bookings });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch bookings" }, { status: 500 });
   }
 }
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     }
 
     // Create booking
-    const newBooking = db.bookings.create({
+    const newBooking = await db.bookings.create({
       customerName,
       email: email || "",
       phone,

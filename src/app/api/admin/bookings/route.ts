@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   const status = searchParams.get("status");
   const date = searchParams.get("date");
 
-  let bookings = db.bookings.getAll();
+  let bookings = await db.bookings.getAll();
 
   // Filter by status
   if (status && status !== "all") {
@@ -63,7 +63,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    const updated = db.bookings.update(id, { status });
+    const updated = await db.bookings.update(id, { status });
 
     if (!updated) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
@@ -87,7 +87,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "ID required" }, { status: 400 });
   }
 
-  const deleted = db.bookings.delete(id);
+  const deleted = await db.bookings.delete(id);
 
   if (!deleted) {
     return NextResponse.json({ error: "Booking not found" }, { status: 404 });
