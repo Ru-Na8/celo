@@ -240,6 +240,120 @@ export default function BookingsPage() {
 
   return (
     <div>
+      {/* Fixed Toast Notification for Validation Errors */}
+      {showValidationError && (
+        <div
+          style={{
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 2000,
+            backgroundColor: "#1B2838",
+            border: "2px solid #EF4444",
+            borderRadius: "16px",
+            padding: "20px 24px",
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(239,68,68,0.2)",
+            animation: "slideDown 0.3s ease, shake 0.5s ease 0.3s",
+            minWidth: "350px",
+          }}
+        >
+          <div style={{
+            width: "48px",
+            height: "48px",
+            borderRadius: "50%",
+            backgroundColor: "#EF4444",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "24px",
+            flexShrink: 0,
+          }}>
+            ⚠️
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ color: "#EF4444", fontWeight: 700, fontSize: "16px", marginBottom: "4px" }}>
+              Fyll i alla obligatoriska fält
+            </div>
+            <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "13px" }}>
+              {Object.keys(validationErrors).length} fält saknas
+            </div>
+          </div>
+          <button
+            onClick={() => setShowValidationError(false)}
+            style={{
+              background: "rgba(239,68,68,0.2)",
+              border: "none",
+              color: "#EF4444",
+              width: "32px",
+              height: "32px",
+              borderRadius: "8px",
+              fontSize: "18px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Global Error Toast */}
+      {error && (
+        <div
+          style={{
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 2000,
+            backgroundColor: "#1B2838",
+            border: "2px solid #EF4444",
+            borderRadius: "16px",
+            padding: "16px 24px",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+            animation: "slideDown 0.3s ease",
+          }}
+        >
+          <span style={{ fontSize: "20px" }}>❌</span>
+          <span style={{ color: "#EF4444", fontWeight: 500 }}>{error}</span>
+          <button
+            onClick={() => setError("")}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#EF4444",
+              fontSize: "18px",
+              cursor: "pointer",
+              marginLeft: "8px",
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Animation styles */}
+      <style>{`
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+          to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(-50%) translateY(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(calc(-50% - 5px)) translateY(0); }
+          20%, 40%, 60%, 80% { transform: translateX(calc(-50% + 5px)) translateY(0); }
+        }
+      `}</style>
+
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px" }}>
         <div>
@@ -347,26 +461,6 @@ export default function BookingsPage() {
           </div>
         )}
       </div>
-
-      {error && (
-        <div
-          style={{
-            backgroundColor: "rgba(239,68,68,0.1)",
-            color: "#EF4444",
-            padding: "12px 16px",
-            borderRadius: "8px",
-            marginBottom: "24px",
-          }}
-        >
-          {error}
-          <button
-            onClick={() => setError("")}
-            style={{ marginLeft: "12px", background: "none", border: "none", color: "#EF4444", cursor: "pointer" }}
-          >
-            ✕
-          </button>
-        </div>
-      )}
 
       {/* Bookings Table */}
       <div
@@ -576,58 +670,6 @@ export default function BookingsPage() {
                 ✕
               </button>
             </div>
-
-            {/* Validation Error Banner */}
-            {showValidationError && (
-              <div
-                style={{
-                  backgroundColor: "rgba(239,68,68,0.15)",
-                  border: "2px solid #EF4444",
-                  borderRadius: "12px",
-                  padding: "16px",
-                  marginBottom: "16px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  animation: "shake 0.5s ease",
-                }}
-              >
-                <div style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  backgroundColor: "#EF4444",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "20px",
-                  flexShrink: 0,
-                }}>
-                  ⚠️
-                </div>
-                <div>
-                  <div style={{ color: "#EF4444", fontWeight: 600, fontSize: "14px" }}>
-                    Fyll i alla obligatoriska fält
-                  </div>
-                  <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "12px", marginTop: "2px" }}>
-                    Markerade fält måste fyllas i
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowValidationError(false)}
-                  style={{
-                    marginLeft: "auto",
-                    background: "none",
-                    border: "none",
-                    color: "#EF4444",
-                    fontSize: "18px",
-                    cursor: "pointer",
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-            )}
 
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               {/* Service */}

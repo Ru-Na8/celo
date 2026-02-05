@@ -63,5 +63,18 @@
     "status": "pending",
     "createdAt": "2026-02-05T18:00:43.915Z",
     "updatedAt": "2026-02-05T18:00:43.915Z"
+  },
+  {
+    "customerName": "Sasa",
+    "email": "rn222qf@student.lnu.se",
+    "phone": "0793358236",
+    "notes": "",
+    "serviceId": "herrklippning",
+    "date": "2026-02-06",
+    "time": "10:30",
+    "id": "ml9srejzjw035wxlef",
+    "status": "confirmed",
+    "createdAt": "2026-02-05T18:35:42.575Z",
+    "updatedAt": "2026-02-05T18:35:49.453Z"
   }
 ]

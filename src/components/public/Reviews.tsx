@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 // Real reviews from Google
 const reviews = [
   { name: "Marcus Olofsson", rating: 5, text: "Zidane tar alltid hand om mig på bästa sätt 😊👌", date: "6 månader sedan" },
@@ -19,6 +21,9 @@ function StarIcon({ filled }: { filled: boolean }) {
 }
 
 export function Reviews() {
+  const [hoveredReview, setHoveredReview] = useState<number | null>(null);
+  const [hoveredCta, setHoveredCta] = useState(false);
+
   return (
     <section
       id="reviews"
@@ -73,52 +78,64 @@ export function Reviews() {
             marginBottom: "40px",
           }}
         >
-          {reviews.map((review, index) => (
-            <div
-              key={index}
-              style={{
-                backgroundColor: "#fff",
-                borderRadius: "16px",
-                padding: "24px",
-              }}
-            >
-              {/* Stars */}
-              <div style={{ display: "flex", gap: "2px", marginBottom: "16px" }}>
-                {[...Array(5)].map((_, i) => (
-                  <StarIcon key={i} filled={i < review.rating} />
-                ))}
-              </div>
-
-              {/* Text */}
-              <p style={{ color: "#334E68", fontSize: "16px", lineHeight: 1.6, margin: "0 0 20px 0" }}>
-                "{review.text}"
-              </p>
-
-              {/* Author */}
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <div
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "50%",
-                    backgroundColor: "#D4AF37",
-                    color: "#000",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: "bold",
-                    fontSize: "16px",
-                  }}
-                >
-                  {review.name.charAt(0)}
+          {reviews.map((review, index) => {
+            const isHovered = hoveredReview === index;
+            return (
+              <div
+                key={index}
+                onMouseEnter={() => setHoveredReview(index)}
+                onMouseLeave={() => setHoveredReview(null)}
+                style={{
+                  backgroundColor: "#fff",
+                  borderRadius: "16px",
+                  padding: "24px",
+                  transition: "all 0.3s ease",
+                  transform: isHovered ? "translateY(-8px) scale(1.02)" : "none",
+                  boxShadow: isHovered ? "0 20px 40px rgba(212,175,55,0.2)" : "0 4px 15px rgba(0,0,0,0.1)",
+                  border: isHovered ? "2px solid #D4AF37" : "2px solid transparent",
+                  cursor: "default",
+                }}
+              >
+                {/* Stars */}
+                <div style={{ display: "flex", gap: "2px", marginBottom: "16px" }}>
+                  {[...Array(5)].map((_, i) => (
+                    <StarIcon key={i} filled={i < review.rating} />
+                  ))}
                 </div>
-                <div>
-                  <div style={{ fontWeight: 600, color: "#102A43" }}>{review.name}</div>
-                  <div style={{ fontSize: "13px", color: "#829AB1" }}>{review.date}</div>
+
+                {/* Text */}
+                <p style={{ color: "#334E68", fontSize: "16px", lineHeight: 1.6, margin: "0 0 20px 0" }}>
+                  "{review.text}"
+                </p>
+
+                {/* Author */}
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "50%",
+                      backgroundColor: isHovered ? "#e5c349" : "#D4AF37",
+                      color: "#000",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold",
+                      fontSize: "16px",
+                      transition: "all 0.3s ease",
+                      transform: isHovered ? "scale(1.1)" : "none",
+                    }}
+                  >
+                    {review.name.charAt(0)}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, color: "#102A43" }}>{review.name}</div>
+                    <div style={{ fontSize: "13px", color: "#829AB1" }}>{review.date}</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* CTA */}
@@ -127,17 +144,22 @@ export function Reviews() {
             href="https://www.google.com/search?q=celo+salong+malmö"
             target="_blank"
             rel="noopener noreferrer"
+            onMouseEnter={() => setHoveredCta(true)}
+            onMouseLeave={() => setHoveredCta(false)}
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "8px",
-              backgroundColor: "#fff",
+              backgroundColor: hoveredCta ? "#f5f5f5" : "#fff",
               color: "#102A43",
               padding: "14px 28px",
               borderRadius: "50px",
               fontWeight: 600,
               fontSize: "15px",
               textDecoration: "none",
+              transition: "all 0.2s ease",
+              transform: hoveredCta ? "translateY(-2px)" : "none",
+              boxShadow: hoveredCta ? "0 8px 25px rgba(0,0,0,0.15)" : "0 4px 15px rgba(0,0,0,0.1)",
             }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24">

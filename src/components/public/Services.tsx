@@ -4,10 +4,39 @@ import { useState } from "react";
 import Link from "next/link";
 
 const services = [
-  { id: "herrklippning", name: "Herrklippning", price: 350, duration: "30 min", icon: "✂️" },
-  { id: "rakning", name: "Rakning", price: 400, duration: "45 min", icon: "🪒" },
-  { id: "vip-paket", name: "VIP Paket", price: 650, duration: "75 min", icon: "👑", popular: true },
-  { id: "skagg", name: "Skäggtrimning", price: 250, duration: "20 min", icon: "✨" },
+  {
+    id: "herrklippning",
+    name: "Herrklippning",
+    price: 350,
+    duration: "30 min",
+    icon: "✂️",
+    description: "Professionell klippning med konsultation. Vi anpassar stilen efter ditt hår och önskemål."
+  },
+  {
+    id: "rakning",
+    name: "Rakning",
+    price: 400,
+    duration: "45 min",
+    icon: "🪒",
+    description: "Traditionell rakning med varm handduk, skum och rakkniv. En avkopplande upplevelse."
+  },
+  {
+    id: "vip-paket",
+    name: "VIP Paket",
+    price: 650,
+    duration: "75 min",
+    icon: "👑",
+    popular: true,
+    description: "Komplett behandling: klippning, skäggtrimning, rakning och avkopplande massage."
+  },
+  {
+    id: "skagg",
+    name: "Skäggtrimning",
+    price: 250,
+    duration: "20 min",
+    icon: "✨",
+    description: "Professionell skäggformning och trimning för att hålla ditt skägg välvårdat."
+  },
 ];
 
 export function Services() {
@@ -37,87 +66,110 @@ export function Services() {
           {services.map((service) => {
             const isHovered = hoveredService === service.id;
             return (
-              <Link
-                href={`/booking?service=${service.id}`}
-                key={service.id}
-                onMouseEnter={() => setHoveredService(service.id)}
-                onMouseLeave={() => setHoveredService(null)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "24px",
-                  backgroundColor: isHovered ? "rgba(212,175,55,0.1)" : "rgba(255,255,255,0.05)",
-                  borderRadius: "12px",
-                  border: isHovered ? "1px solid rgba(212,175,55,0.3)" : "1px solid rgba(255,255,255,0.1)",
-                  textDecoration: "none",
-                  transition: "all 0.2s ease",
-                  transform: isHovered ? "translateX(8px)" : "none",
-                  cursor: "pointer",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                  <div
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      borderRadius: "12px",
-                      backgroundColor: isHovered ? "rgba(212,175,55,0.25)" : "rgba(212,175,55,0.15)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "24px",
-                      transition: "all 0.2s ease",
-                      transform: isHovered ? "scale(1.1)" : "none",
-                    }}
-                  >
-                    {service.icon}
-                  </div>
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <h3 style={{ color: "#fff", fontSize: "18px", margin: 0, fontWeight: 600 }}>{service.name}</h3>
-                      {service.popular && (
-                        <span
-                          style={{
-                            backgroundColor: "#D4AF37",
-                            color: "#000",
-                            padding: "2px 8px",
-                            borderRadius: "20px",
-                            fontSize: "11px",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          Populär
-                        </span>
-                      )}
+              <div key={service.id} style={{ position: "relative" }}>
+                <Link
+                  href={`/booking?service=${service.id}`}
+                  onMouseEnter={() => setHoveredService(service.id)}
+                  onMouseLeave={() => setHoveredService(null)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "24px",
+                    backgroundColor: isHovered ? "rgba(212,175,55,0.1)" : "rgba(255,255,255,0.05)",
+                    borderRadius: "12px",
+                    border: isHovered ? "1px solid rgba(212,175,55,0.3)" : "1px solid rgba(255,255,255,0.1)",
+                    textDecoration: "none",
+                    transition: "all 0.2s ease",
+                    transform: isHovered ? "translateX(8px)" : "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "16px", flex: 1 }}>
+                    <div
+                      style={{
+                        width: "48px",
+                        height: "48px",
+                        borderRadius: "12px",
+                        backgroundColor: isHovered ? "rgba(212,175,55,0.25)" : "rgba(212,175,55,0.15)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "24px",
+                        transition: "all 0.2s ease",
+                        transform: isHovered ? "scale(1.1)" : "none",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {service.icon}
                     </div>
-                    <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "14px", marginTop: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                      </svg>
-                      {service.duration}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                        <h3 style={{ color: "#fff", fontSize: "18px", margin: 0, fontWeight: 600 }}>{service.name}</h3>
+                        {service.popular && (
+                          <span
+                            style={{
+                              backgroundColor: "#D4AF37",
+                              color: "#000",
+                              padding: "2px 8px",
+                              borderRadius: "20px",
+                              fontSize: "11px",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            Populär
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "14px", marginTop: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10" />
+                          <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                        {service.duration}
+                      </div>
+                      {/* Description tooltip - shows on hover */}
+                      <div
+                        style={{
+                          maxHeight: isHovered ? "60px" : "0",
+                          opacity: isHovered ? 1 : 0,
+                          overflow: "hidden",
+                          transition: "all 0.3s ease",
+                          marginTop: isHovered ? "8px" : "0",
+                        }}
+                      >
+                        <p style={{
+                          color: "rgba(255,255,255,0.8)",
+                          fontSize: "13px",
+                          margin: 0,
+                          lineHeight: 1.4,
+                          paddingTop: "8px",
+                          borderTop: "1px solid rgba(212,175,55,0.2)",
+                        }}>
+                          ℹ️ {service.description}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <div style={{ textAlign: "right" }}>
-                    <span style={{ color: "#D4AF37", fontSize: "24px", fontWeight: "bold" }}>{service.price}</span>
-                    <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "14px", marginLeft: "4px" }}>kr</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+                    <div style={{ textAlign: "right" }}>
+                      <span style={{ color: "#D4AF37", fontSize: "24px", fontWeight: "bold" }}>{service.price}</span>
+                      <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "14px", marginLeft: "4px" }}>kr</span>
+                    </div>
+                    <div
+                      style={{
+                        opacity: isHovered ? 1 : 0,
+                        transform: isHovered ? "translateX(0)" : "translateX(-8px)",
+                        transition: "all 0.2s ease",
+                        color: "#D4AF37",
+                        fontSize: "20px",
+                      }}
+                    >
+                      →
+                    </div>
                   </div>
-                  <div
-                    style={{
-                      opacity: isHovered ? 1 : 0,
-                      transform: isHovered ? "translateX(0)" : "translateX(-8px)",
-                      transition: "all 0.2s ease",
-                      color: "#D4AF37",
-                      fontSize: "20px",
-                    }}
-                  >
-                    →
-                  </div>
-                </div>
-              </Link>
+                </Link>
+              </div>
             );
           })}
         </div>
