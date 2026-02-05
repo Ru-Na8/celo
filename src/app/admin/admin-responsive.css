@@ -1,0 +1,82 @@
+/* Admin responsive styles */
+
+/* Responsive table */
+@media (max-width: 768px) {
+  table {
+    font-size: 12px;
+  }
+
+  table td,
+  table th {
+    padding: 8px 4px;
+  }
+
+  /* Make tables scrollable on mobile */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Responsive grid */
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Responsive forms */
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Modal responsive */
+  .modal-content {
+    width: 95vw;
+    max-width: none;
+  }
+
+  /* Hide columns on small screens */
+  .hide-mobile {
+    display: none;
+  }
+}
+
+/* Mobile buttons */
+@media (max-width: 480px) {
+  button {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .button-group button {
+    flex: 1;
+    min-width: 80px;
+  }
+}
+
+/* Ensure inputs are readable on mobile */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    width: 100%;
+  }
+}

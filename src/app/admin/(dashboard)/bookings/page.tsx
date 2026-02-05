@@ -321,8 +321,17 @@ export default function BookingsPage() {
             </button>
           </div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <div style={{ 
+            overflowX: "auto",
+            WebkitOverflowScrolling: "touch",
+            borderRadius: "8px",
+            border: "1px solid rgba(255,255,255,0.05)",
+          }}>
+            <table style={{ 
+              width: "100%", 
+              borderCollapse: "collapse",
+              minWidth: "600px",
+            }}>
               <thead>
                 <tr style={{ backgroundColor: "rgba(0,0,0,0.2)" }}>
                   <th style={{ ...thStyle }}>Kund</th>
