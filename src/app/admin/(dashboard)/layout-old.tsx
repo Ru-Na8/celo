@@ -58,7 +58,7 @@ export default function AdminDashboardLayout({
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#0F1419", display: "flex", flexDirection: "column" }}>
       {/* Mobile Header */}
-      <div style={{ 
+      <div style={{
         display: "none",
         "@media (max-width: 768px)": { display: "flex" },
         backgroundColor: "#1B2838",
@@ -66,7 +66,7 @@ export default function AdminDashboardLayout({
         padding: "16px",
         alignItems: "center",
         justifyContent: "space-between",
-      }}>
+      } as any}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{
             width: "32px",
@@ -108,7 +108,7 @@ export default function AdminDashboardLayout({
               zIndex: 40,
               display: "none",
               "@media (max-width: 768px)": { display: "block" },
-            }}
+            } as any}
           />
         )}
 
@@ -132,7 +132,7 @@ export default function AdminDashboardLayout({
               height: "calc(100vh - 60px)",
               transition: "left 0.3s ease",
             },
-          }}
+          } as any}
         >
         {/* Logo - Hidden on Mobile */}
         <div
@@ -176,7 +176,7 @@ export default function AdminDashboardLayout({
               color: "#D4AF37",
               fontSize: "20px",
               cursor: "pointer",
-            }}
+            } as any}
           >
             ✕
           </button>
@@ -256,9 +256,9 @@ export default function AdminDashboardLayout({
       </aside>
 
       {/* Main Content */}
-      <main style={{ 
-        flex: 1, 
-        marginLeft: "260px", 
+      <main style={{
+        flex: 1,
+        marginLeft: "260px",
         padding: "32px",
         overflowY: "auto",
         "@media (max-width: 768px)": {
@@ -266,9 +266,10 @@ export default function AdminDashboardLayout({
           padding: "16px",
           marginTop: "60px",
         },
-      }}>
+      } as any}>
         {children}
       </main>
+      </div>
     </div>
   );
 }
