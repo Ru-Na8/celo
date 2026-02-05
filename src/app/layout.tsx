@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Celo Salong | Professionell Barbershop i Malmö",
   description: "Professionell herrfrisör i Malmö. Klassiska klippningar, rakning och skäggtrimning. 4.6 stjärnor på Google. Boka din tid idag!",
   keywords: ["barbershop", "malmö", "herrfrisör", "klippning", "rakning", "skägg", "celo salong"],
+  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
 };
 
 export default function RootLayout({
