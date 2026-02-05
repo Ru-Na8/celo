@@ -47,6 +47,9 @@ export default function BookingsPage() {
   const [dateFilter, setDateFilter] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
+  const [showValidationError, setShowValidationError] = useState(false);
 
   const [newBooking, setNewBooking] = useState({
     customerName: "",
@@ -161,11 +164,24 @@ export default function BookingsPage() {
   };
 
   const createBooking = async () => {
-    if (!newBooking.customerName || !newBooking.phone || !newBooking.serviceId || !newBooking.date || !newBooking.time) {
-      setError("Fyll i alla obligatoriska fält");
+    // Validate all required fields and track which are missing
+    const errors: Record<string, boolean> = {};
+    if (!newBooking.serviceId) errors.serviceId = true;
+    if (!newBooking.date) errors.date = true;
+    if (!newBooking.time) errors.time = true;
+    if (!newBooking.customerName) errors.customerName = true;
+    if (!newBooking.phone) errors.phone = true;
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setShowValidationError(true);
+      // Auto-hide after 5 seconds
+      setTimeout(() => setShowValidationError(false), 5000);
       return;
     }
 
+    setValidationErrors({});
+    setShowValidationError(false);
     setIsCreating(true);
     try {
       const res = await fetch("/api/bookings", {
@@ -185,6 +201,7 @@ export default function BookingsPage() {
           time: "",
           notes: "",
         });
+        setValidationErrors({});
         fetchBookings();
       } else {
         const data = await res.json();
@@ -560,23 +577,89 @@ export default function BookingsPage() {
               </button>
             </div>
 
+            {/* Validation Error Banner */}
+            {showValidationError && (
+              <div
+                style={{
+                  backgroundColor: "rgba(239,68,68,0.15)",
+                  border: "2px solid #EF4444",
+                  borderRadius: "12px",
+                  padding: "16px",
+                  marginBottom: "16px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  animation: "shake 0.5s ease",
+                }}
+              >
+                <div style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  backgroundColor: "#EF4444",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "20px",
+                  flexShrink: 0,
+                }}>
+                  ⚠️
+                </div>
+                <div>
+                  <div style={{ color: "#EF4444", fontWeight: 600, fontSize: "14px" }}>
+                    Fyll i alla obligatoriska fält
+                  </div>
+                  <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "12px", marginTop: "2px" }}>
+                    Markerade fält måste fyllas i
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowValidationError(false)}
+                  style={{
+                    marginLeft: "auto",
+                    background: "none",
+                    border: "none",
+                    color: "#EF4444",
+                    fontSize: "18px",
+                    cursor: "pointer",
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               {/* Service */}
               <div>
-                <label style={{ color: "rgba(255,255,255,0.8)", fontSize: "14px", display: "block", marginBottom: "6px" }}>
-                  Tjänst *
+                <label style={{
+                  color: validationErrors.serviceId ? "#EF4444" : "rgba(255,255,255,0.8)",
+                  fontSize: "14px",
+                  display: "block",
+                  marginBottom: "6px",
+                  fontWeight: validationErrors.serviceId ? 600 : 400,
+                }}>
+                  Tjänst * {validationErrors.serviceId && <span style={{ color: "#EF4444" }}>— Obligatoriskt</span>}
                 </label>
                 <select
                   value={newBooking.serviceId}
-                  onChange={(e) => setNewBooking({ ...newBooking, serviceId: e.target.value })}
+                  onChange={(e) => {
+                    setNewBooking({ ...newBooking, serviceId: e.target.value });
+                    if (validationErrors.serviceId) setValidationErrors(prev => ({ ...prev, serviceId: false }));
+                  }}
+                  onFocus={() => setFocusedField("serviceId")}
+                  onBlur={() => setFocusedField(null)}
                   style={{
                     width: "100%",
                     padding: "12px 16px",
-                    backgroundColor: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    backgroundColor: focusedField === "serviceId" ? "rgba(212,175,55,0.1)" : "rgba(255,255,255,0.05)",
+                    border: validationErrors.serviceId ? "2px solid #EF4444" : focusedField === "serviceId" ? "2px solid #D4AF37" : "1px solid rgba(255,255,255,0.1)",
                     borderRadius: "8px",
                     color: "#fff",
                     fontSize: "14px",
+                    outline: "none",
+                    transition: "all 0.2s ease",
+                    boxShadow: focusedField === "serviceId" ? "0 0 0 3px rgba(212,175,55,0.2)" : "none",
                   }}
                 >
                   <option value="">Välj tjänst...</option>
@@ -591,42 +674,70 @@ export default function BookingsPage() {
               {/* Date & Time */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label style={{ color: "rgba(255,255,255,0.8)", fontSize: "14px", display: "block", marginBottom: "6px" }}>
-                    Datum *
+                  <label style={{
+                    color: validationErrors.date ? "#EF4444" : "rgba(255,255,255,0.8)",
+                    fontSize: "14px",
+                    display: "block",
+                    marginBottom: "6px",
+                    fontWeight: validationErrors.date ? 600 : 400,
+                  }}>
+                    Datum * {validationErrors.date && <span style={{ color: "#EF4444" }}>— Obligatoriskt</span>}
                   </label>
                   <input
                     type="date"
                     min={today}
                     value={newBooking.date}
-                    onChange={(e) => setNewBooking({ ...newBooking, date: e.target.value, time: "" })}
+                    onChange={(e) => {
+                      setNewBooking({ ...newBooking, date: e.target.value, time: "" });
+                      if (validationErrors.date) setValidationErrors(prev => ({ ...prev, date: false }));
+                    }}
+                    onFocus={() => setFocusedField("date")}
+                    onBlur={() => setFocusedField(null)}
                     style={{
                       width: "100%",
                       padding: "12px 16px",
-                      backgroundColor: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.1)",
+                      backgroundColor: focusedField === "date" ? "rgba(212,175,55,0.1)" : "rgba(255,255,255,0.05)",
+                      border: validationErrors.date ? "2px solid #EF4444" : focusedField === "date" ? "2px solid #D4AF37" : "1px solid rgba(255,255,255,0.1)",
                       borderRadius: "8px",
                       color: "#fff",
                       fontSize: "14px",
+                      outline: "none",
+                      transition: "all 0.2s ease",
+                      boxShadow: focusedField === "date" ? "0 0 0 3px rgba(212,175,55,0.2)" : "none",
                     }}
                   />
                 </div>
                 <div>
-                  <label style={{ color: "rgba(255,255,255,0.8)", fontSize: "14px", display: "block", marginBottom: "6px" }}>
-                    Tid *
+                  <label style={{
+                    color: validationErrors.time ? "#EF4444" : "rgba(255,255,255,0.8)",
+                    fontSize: "14px",
+                    display: "block",
+                    marginBottom: "6px",
+                    fontWeight: validationErrors.time ? 600 : 400,
+                  }}>
+                    Tid * {validationErrors.time && <span style={{ color: "#EF4444" }}>— Obligatoriskt</span>}
                   </label>
                   <select
                     value={newBooking.time}
-                    onChange={(e) => setNewBooking({ ...newBooking, time: e.target.value })}
+                    onChange={(e) => {
+                      setNewBooking({ ...newBooking, time: e.target.value });
+                      if (validationErrors.time) setValidationErrors(prev => ({ ...prev, time: false }));
+                    }}
+                    onFocus={() => setFocusedField("time")}
+                    onBlur={() => setFocusedField(null)}
                     disabled={!newBooking.date}
                     style={{
                       width: "100%",
                       padding: "12px 16px",
-                      backgroundColor: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.1)",
+                      backgroundColor: focusedField === "time" ? "rgba(212,175,55,0.1)" : "rgba(255,255,255,0.05)",
+                      border: validationErrors.time ? "2px solid #EF4444" : focusedField === "time" ? "2px solid #D4AF37" : "1px solid rgba(255,255,255,0.1)",
                       borderRadius: "8px",
                       color: "#fff",
                       fontSize: "14px",
                       opacity: !newBooking.date ? 0.5 : 1,
+                      outline: "none",
+                      transition: "all 0.2s ease",
+                      boxShadow: focusedField === "time" ? "0 0 0 3px rgba(212,175,55,0.2)" : "none",
                     }}
                   >
                     <option value="">{newBooking.date ? "Välj tid..." : "Välj datum först"}</option>
@@ -655,44 +766,72 @@ export default function BookingsPage() {
 
               {/* Customer Name */}
               <div>
-                <label style={{ color: "rgba(255,255,255,0.8)", fontSize: "14px", display: "block", marginBottom: "6px" }}>
-                  Kundnamn *
+                <label style={{
+                  color: validationErrors.customerName ? "#EF4444" : "rgba(255,255,255,0.8)",
+                  fontSize: "14px",
+                  display: "block",
+                  marginBottom: "6px",
+                  fontWeight: validationErrors.customerName ? 600 : 400,
+                }}>
+                  Kundnamn * {validationErrors.customerName && <span style={{ color: "#EF4444" }}>— Obligatoriskt</span>}
                 </label>
                 <input
                   type="text"
                   value={newBooking.customerName}
-                  onChange={(e) => setNewBooking({ ...newBooking, customerName: e.target.value })}
+                  onChange={(e) => {
+                    setNewBooking({ ...newBooking, customerName: e.target.value });
+                    if (validationErrors.customerName) setValidationErrors(prev => ({ ...prev, customerName: false }));
+                  }}
+                  onFocus={() => setFocusedField("customerName")}
+                  onBlur={() => setFocusedField(null)}
                   placeholder="Kundens namn"
                   style={{
                     width: "100%",
                     padding: "12px 16px",
-                    backgroundColor: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    backgroundColor: focusedField === "customerName" ? "rgba(212,175,55,0.1)" : "rgba(255,255,255,0.05)",
+                    border: validationErrors.customerName ? "2px solid #EF4444" : focusedField === "customerName" ? "2px solid #D4AF37" : "1px solid rgba(255,255,255,0.1)",
                     borderRadius: "8px",
                     color: "#fff",
                     fontSize: "14px",
+                    outline: "none",
+                    transition: "all 0.2s ease",
+                    boxShadow: focusedField === "customerName" ? "0 0 0 3px rgba(212,175,55,0.2)" : "none",
                   }}
                 />
               </div>
 
               {/* Phone */}
               <div>
-                <label style={{ color: "rgba(255,255,255,0.8)", fontSize: "14px", display: "block", marginBottom: "6px" }}>
-                  Telefon *
+                <label style={{
+                  color: validationErrors.phone ? "#EF4444" : "rgba(255,255,255,0.8)",
+                  fontSize: "14px",
+                  display: "block",
+                  marginBottom: "6px",
+                  fontWeight: validationErrors.phone ? 600 : 400,
+                }}>
+                  Telefon * {validationErrors.phone && <span style={{ color: "#EF4444" }}>— Obligatoriskt</span>}
                 </label>
                 <input
                   type="tel"
                   value={newBooking.phone}
-                  onChange={(e) => setNewBooking({ ...newBooking, phone: e.target.value })}
+                  onChange={(e) => {
+                    setNewBooking({ ...newBooking, phone: e.target.value });
+                    if (validationErrors.phone) setValidationErrors(prev => ({ ...prev, phone: false }));
+                  }}
+                  onFocus={() => setFocusedField("phone")}
+                  onBlur={() => setFocusedField(null)}
                   placeholder="070-123 45 67"
                   style={{
                     width: "100%",
                     padding: "12px 16px",
-                    backgroundColor: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    backgroundColor: focusedField === "phone" ? "rgba(212,175,55,0.1)" : "rgba(255,255,255,0.05)",
+                    border: validationErrors.phone ? "2px solid #EF4444" : focusedField === "phone" ? "2px solid #D4AF37" : "1px solid rgba(255,255,255,0.1)",
                     borderRadius: "8px",
                     color: "#fff",
                     fontSize: "14px",
+                    outline: "none",
+                    transition: "all 0.2s ease",
+                    boxShadow: focusedField === "phone" ? "0 0 0 3px rgba(212,175,55,0.2)" : "none",
                   }}
                 />
               </div>
@@ -706,15 +845,20 @@ export default function BookingsPage() {
                   type="email"
                   value={newBooking.email}
                   onChange={(e) => setNewBooking({ ...newBooking, email: e.target.value })}
+                  onFocus={() => setFocusedField("email")}
+                  onBlur={() => setFocusedField(null)}
                   placeholder="kund@email.com"
                   style={{
                     width: "100%",
                     padding: "12px 16px",
-                    backgroundColor: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    backgroundColor: focusedField === "email" ? "rgba(212,175,55,0.1)" : "rgba(255,255,255,0.05)",
+                    border: focusedField === "email" ? "2px solid #D4AF37" : "1px solid rgba(255,255,255,0.1)",
                     borderRadius: "8px",
                     color: "#fff",
                     fontSize: "14px",
+                    outline: "none",
+                    transition: "all 0.2s ease",
+                    boxShadow: focusedField === "email" ? "0 0 0 3px rgba(212,175,55,0.2)" : "none",
                   }}
                 />
               </div>
@@ -727,21 +871,35 @@ export default function BookingsPage() {
                 <textarea
                   value={newBooking.notes}
                   onChange={(e) => setNewBooking({ ...newBooking, notes: e.target.value })}
+                  onFocus={() => setFocusedField("notes")}
+                  onBlur={() => setFocusedField(null)}
                   placeholder="Eventuella anteckningar..."
                   rows={2}
                   style={{
                     width: "100%",
                     padding: "12px 16px",
-                    backgroundColor: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    backgroundColor: focusedField === "notes" ? "rgba(212,175,55,0.1)" : "rgba(255,255,255,0.05)",
+                    border: focusedField === "notes" ? "2px solid #D4AF37" : "1px solid rgba(255,255,255,0.1)",
                     borderRadius: "8px",
                     color: "#fff",
                     fontSize: "14px",
                     resize: "vertical",
+                    outline: "none",
+                    transition: "all 0.2s ease",
+                    boxShadow: focusedField === "notes" ? "0 0 0 3px rgba(212,175,55,0.2)" : "none",
                   }}
                 />
               </div>
             </div>
+
+            {/* Shake animation style */}
+            <style>{`
+              @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                20%, 40%, 60%, 80% { transform: translateX(5px); }
+              }
+            `}</style>
 
             {/* Actions */}
             <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>

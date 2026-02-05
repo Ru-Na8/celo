@@ -50,5 +50,18 @@
     "status": "confirmed",
     "createdAt": "2026-02-05T17:44:26.259Z",
     "updatedAt": "2026-02-05T17:45:28.337Z"
+  },
+  {
+    "customerName": "Semon",
+    "email": "rn222qf@student.lnu.se",
+    "phone": "0793358236",
+    "notes": "",
+    "serviceId": "vip-paket",
+    "date": "2026-02-08",
+    "time": "11:00",
+    "id": "ml9rif7v8cc1fy1wooj",
+    "status": "pending",
+    "createdAt": "2026-02-05T18:00:43.915Z",
+    "updatedAt": "2026-02-05T18:00:43.915Z"
   }
 ]

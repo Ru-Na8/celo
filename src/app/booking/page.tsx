@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const services = [
@@ -16,13 +17,17 @@ const allTimeSlots = [
   "16:00", "16:30", "17:00", "17:30", "18:00", "18:30",
 ];
 
-export default function BookingPage() {
+function BookingContent() {
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [emailStatus, setEmailStatus] = useState<"queued" | "skipped_missing_key" | null>(null);
+  const [hoveredService, setHoveredService] = useState<string | null>(null);
+  const [hoveredTime, setHoveredTime] = useState<string | null>(null);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     serviceId: "",
@@ -33,6 +38,14 @@ export default function BookingPage() {
     phone: "",
     notes: "",
   });
+
+  // Check for service in URL params
+  useEffect(() => {
+    const serviceParam = searchParams.get("service");
+    if (serviceParam && services.some(s => s.id === serviceParam)) {
+      setFormData(prev => ({ ...prev, serviceId: serviceParam }));
+    }
+  }, [searchParams]);
 
   const selectedService = services.find((s) => s.id === formData.serviceId);
 
@@ -184,29 +197,51 @@ export default function BookingPage() {
       <div style={{ padding: "32px 20px 0" }}>
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "48px" }}>
-            {[1, 2, 3].map((s) => (
-              <div key={s} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div
-                  style={{
-                    width: "32px",
-                    height: "32px",
-                    borderRadius: "50%",
-                    backgroundColor: step >= s ? "#D4AF37" : "rgba(255,255,255,0.1)",
-                    color: step >= s ? "#000" : "rgba(255,255,255,0.4)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: "bold",
-                    fontSize: "14px",
-                  }}
-                >
-                  {step > s ? "✓" : s}
+            {[
+              { num: 1, label: "Tjänst" },
+              { num: 2, label: "Tid" },
+              { num: 3, label: "Uppgifter" }
+            ].map((s) => {
+              const isCompleted = step > s.num;
+              const isCurrent = step === s.num;
+              const canNavigate = isCompleted;
+              return (
+                <div key={s.num} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div
+                    onClick={() => canNavigate && setStep(s.num)}
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "50%",
+                      backgroundColor: step >= s.num ? "#D4AF37" : "rgba(255,255,255,0.1)",
+                      color: step >= s.num ? "#000" : "rgba(255,255,255,0.4)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                      cursor: canNavigate ? "pointer" : "default",
+                      transition: "all 0.2s",
+                      transform: canNavigate ? "scale(1)" : "none",
+                    }}
+                    title={canNavigate ? `Gå tillbaka till ${s.label}` : s.label}
+                  >
+                    {isCompleted ? "✓" : s.num}
+                  </div>
+                  <span style={{
+                    color: isCurrent ? "#D4AF37" : step > s.num ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.3)",
+                    fontSize: "12px",
+                    fontWeight: isCurrent ? 600 : 400,
+                    display: "none",
+                  }}>
+                    {s.label}
+                  </span>
+                  {s.num < 3 && (
+                    <div style={{ width: "60px", height: "2px", backgroundColor: step > s.num ? "#D4AF37" : "rgba(255,255,255,0.1)" }} />
+                  )}
                 </div>
-                {s < 3 && (
-                  <div style={{ width: "60px", height: "2px", backgroundColor: step > s ? "#D4AF37" : "rgba(255,255,255,0.1)" }} />
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
@@ -225,29 +260,55 @@ export default function BookingPage() {
               </p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                {services.map((service) => (
-                  <button
-                    key={service.id}
-                    onClick={() => setFormData({ ...formData, serviceId: service.id })}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "20px",
-                      backgroundColor: formData.serviceId === service.id ? "rgba(212,175,55,0.15)" : "rgba(255,255,255,0.05)",
-                      border: formData.serviceId === service.id ? "2px solid #D4AF37" : "2px solid transparent",
-                      borderRadius: "12px",
-                      cursor: "pointer",
-                      textAlign: "left",
-                    }}
-                  >
-                    <div>
-                      <div style={{ color: "#fff", fontWeight: 600, fontSize: "16px" }}>{service.name}</div>
-                      <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px", marginTop: "4px" }}>{service.duration}</div>
-                    </div>
-                    <div style={{ color: "#D4AF37", fontWeight: "bold", fontSize: "20px" }}>{service.price} kr</div>
-                  </button>
-                ))}
+                {services.map((service) => {
+                  const isSelected = formData.serviceId === service.id;
+                  const isHovered = hoveredService === service.id;
+                  return (
+                    <button
+                      key={service.id}
+                      onClick={() => setFormData({ ...formData, serviceId: service.id })}
+                      onMouseEnter={() => setHoveredService(service.id)}
+                      onMouseLeave={() => setHoveredService(null)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "20px",
+                        backgroundColor: isSelected ? "rgba(212,175,55,0.15)" : isHovered ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.05)",
+                        border: isSelected ? "2px solid #D4AF37" : isHovered ? "2px solid rgba(212,175,55,0.3)" : "2px solid transparent",
+                        borderRadius: "12px",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        transition: "all 0.2s ease",
+                        transform: isHovered && !isSelected ? "translateX(4px)" : "none",
+                      }}
+                    >
+                      <div>
+                        <div style={{ color: "#fff", fontWeight: 600, fontSize: "16px" }}>{service.name}</div>
+                        <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px", marginTop: "4px" }}>{service.duration}</div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <div style={{ color: "#D4AF37", fontWeight: "bold", fontSize: "20px" }}>{service.price} kr</div>
+                        {isSelected && (
+                          <div style={{
+                            width: "24px",
+                            height: "24px",
+                            borderRadius: "50%",
+                            backgroundColor: "#D4AF37",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#000",
+                            fontSize: "14px",
+                            fontWeight: "bold",
+                          }}>
+                            ✓
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
 
               <button
@@ -291,14 +352,19 @@ export default function BookingPage() {
                   min={today}
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  onFocus={() => setFocusedField("date")}
+                  onBlur={() => setFocusedField(null)}
                   style={{
                     width: "100%",
                     padding: "14px 16px",
-                    backgroundColor: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.2)",
+                    backgroundColor: focusedField === "date" ? "rgba(212,175,55,0.1)" : "rgba(255,255,255,0.05)",
+                    border: focusedField === "date" ? "2px solid #D4AF37" : "1px solid rgba(255,255,255,0.2)",
                     borderRadius: "10px",
                     color: "#fff",
                     fontSize: "16px",
+                    outline: "none",
+                    transition: "all 0.2s ease",
+                    boxShadow: focusedField === "date" ? "0 0 0 3px rgba(212,175,55,0.2)" : "none",
                   }}
                 />
               </div>
@@ -329,23 +395,31 @@ export default function BookingPage() {
                     </div>
                   ) : (
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
-                      {availableTimeSlots.map((time) => (
-                        <button
-                          key={time}
-                          onClick={() => setFormData({ ...formData, time })}
-                          style={{
-                            padding: "12px",
-                            backgroundColor: formData.time === time ? "#D4AF37" : "rgba(255,255,255,0.05)",
-                            color: formData.time === time ? "#000" : "#fff",
-                            border: "none",
-                            borderRadius: "8px",
-                            cursor: "pointer",
-                            fontWeight: formData.time === time ? "bold" : "normal",
-                          }}
-                        >
-                          {time}
-                        </button>
-                      ))}
+                      {availableTimeSlots.map((time) => {
+                        const isSelected = formData.time === time;
+                        const isHovered = hoveredTime === time;
+                        return (
+                          <button
+                            key={time}
+                            onClick={() => setFormData({ ...formData, time })}
+                            onMouseEnter={() => setHoveredTime(time)}
+                            onMouseLeave={() => setHoveredTime(null)}
+                            style={{
+                              padding: "12px",
+                              backgroundColor: isSelected ? "#D4AF37" : isHovered ? "rgba(212,175,55,0.2)" : "rgba(255,255,255,0.05)",
+                              color: isSelected ? "#000" : isHovered ? "#D4AF37" : "#fff",
+                              border: isSelected ? "none" : isHovered ? "1px solid rgba(212,175,55,0.4)" : "1px solid transparent",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                              fontWeight: isSelected ? "bold" : "normal",
+                              transition: "all 0.15s ease",
+                              transform: isHovered && !isSelected ? "scale(1.05)" : "none",
+                            }}
+                          >
+                            {time}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -408,15 +482,20 @@ export default function BookingPage() {
                     type="text"
                     value={formData.customerName}
                     onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                    onFocus={() => setFocusedField("customerName")}
+                    onBlur={() => setFocusedField(null)}
                     placeholder="Ditt namn"
                     style={{
                       width: "100%",
                       padding: "14px 16px",
-                      backgroundColor: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.2)",
+                      backgroundColor: focusedField === "customerName" ? "rgba(212,175,55,0.1)" : "rgba(255,255,255,0.05)",
+                      border: focusedField === "customerName" ? "2px solid #D4AF37" : "1px solid rgba(255,255,255,0.2)",
                       borderRadius: "10px",
                       color: "#fff",
                       fontSize: "16px",
+                      outline: "none",
+                      transition: "all 0.2s ease",
+                      boxShadow: focusedField === "customerName" ? "0 0 0 3px rgba(212,175,55,0.2)" : "none",
                     }}
                   />
                 </div>
@@ -429,15 +508,20 @@ export default function BookingPage() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onFocus={() => setFocusedField("email")}
+                    onBlur={() => setFocusedField(null)}
                     placeholder="din@email.com"
                     style={{
                       width: "100%",
                       padding: "14px 16px",
-                      backgroundColor: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.2)",
+                      backgroundColor: focusedField === "email" ? "rgba(212,175,55,0.1)" : "rgba(255,255,255,0.05)",
+                      border: focusedField === "email" ? "2px solid #D4AF37" : "1px solid rgba(255,255,255,0.2)",
                       borderRadius: "10px",
                       color: "#fff",
                       fontSize: "16px",
+                      outline: "none",
+                      transition: "all 0.2s ease",
+                      boxShadow: focusedField === "email" ? "0 0 0 3px rgba(212,175,55,0.2)" : "none",
                     }}
                   />
                 </div>
@@ -450,15 +534,20 @@ export default function BookingPage() {
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onFocus={() => setFocusedField("phone")}
+                    onBlur={() => setFocusedField(null)}
                     placeholder="070-123 45 67"
                     style={{
                       width: "100%",
                       padding: "14px 16px",
-                      backgroundColor: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.2)",
+                      backgroundColor: focusedField === "phone" ? "rgba(212,175,55,0.1)" : "rgba(255,255,255,0.05)",
+                      border: focusedField === "phone" ? "2px solid #D4AF37" : "1px solid rgba(255,255,255,0.2)",
                       borderRadius: "10px",
                       color: "#fff",
                       fontSize: "16px",
+                      outline: "none",
+                      transition: "all 0.2s ease",
+                      boxShadow: focusedField === "phone" ? "0 0 0 3px rgba(212,175,55,0.2)" : "none",
                     }}
                   />
                 </div>
@@ -470,25 +559,54 @@ export default function BookingPage() {
                   <textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    onFocus={() => setFocusedField("notes")}
+                    onBlur={() => setFocusedField(null)}
                     placeholder="Eventuella önskemål..."
                     rows={3}
                     style={{
                       width: "100%",
                       padding: "14px 16px",
-                      backgroundColor: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.2)",
+                      backgroundColor: focusedField === "notes" ? "rgba(212,175,55,0.1)" : "rgba(255,255,255,0.05)",
+                      border: focusedField === "notes" ? "2px solid #D4AF37" : "1px solid rgba(255,255,255,0.2)",
                       borderRadius: "10px",
                       color: "#fff",
                       fontSize: "16px",
                       resize: "vertical",
+                      outline: "none",
+                      transition: "all 0.2s ease",
+                      boxShadow: focusedField === "notes" ? "0 0 0 3px rgba(212,175,55,0.2)" : "none",
                     }}
                   />
                 </div>
               </div>
 
               {error && (
-                <div style={{ marginTop: "16px", padding: "12px", backgroundColor: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "8px", color: "#EF4444", fontSize: "14px" }}>
-                  {error}
+                <div style={{
+                  marginTop: "16px",
+                  padding: "16px",
+                  backgroundColor: "rgba(239,68,68,0.15)",
+                  border: "2px solid #EF4444",
+                  borderRadius: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                }}>
+                  <div style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    backgroundColor: "#EF4444",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "16px",
+                    flexShrink: 0,
+                  }}>
+                    ⚠️
+                  </div>
+                  <div style={{ color: "#EF4444", fontSize: "14px", fontWeight: 500 }}>
+                    {error}
+                  </div>
                 </div>
               )}
 
@@ -549,5 +667,17 @@ export default function BookingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BookingPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: "100vh", backgroundColor: "#0D1B2A", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ color: "#D4AF37", fontSize: "18px" }}>Laddar...</div>
+      </div>
+    }>
+      <BookingContent />
+    </Suspense>
   );
 }
